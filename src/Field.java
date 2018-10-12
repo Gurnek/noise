@@ -12,7 +12,7 @@ public class Field extends JPanel {
     private Field() {
         ActionListener listener = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                t += 0.02;
+                t += 1;
                 repaint();
             }
         };
@@ -20,17 +20,32 @@ public class Field extends JPanel {
         timer.start();
     }
 
+    private double fbm(int numIters, double x, double y, double z, double persistence, double scale, double low, double high) {
+        double maxAmp = 0;
+        double amp = 1;
+        double freq = scale;
+        double noise = 0;
+
+        for (int i = 0; i < numIters; i++) {
+            noise += osn.eval(x * freq, y * freq, z * freq) * amp;
+            maxAmp += amp;
+            amp *= persistence;
+            freq *= 2;
+        }
+
+        noise = noise / maxAmp;
+        noise = noise * (high - low) / 2 + (high + low) / 2;
+
+        return noise;
+    }
     public void paintComponent(Graphics g) {
         for (int i = 0; i < 400; i++) {
             for (int j = 0; j < 400; j++) {
-                this.r = (osn.eval(i * 0.01, j * 0.01, this.t) + 1) / 2;
-                r *= 255;
-                this.gr = (osn.eval(j * 0.01, i * 0.01, this.t) + 1) / 2;
-                gr *= 255;
-                this.b = (osn.eval(this.t, i * 0.01, j * 0.01) + 1) / 2;
-                b *= 255;
+                this.r = this.fbm(2, i, j, this.t, 2, 0.01, 0, 255);
+                this.gr = this.fbm(2, j, i, this.t, 2, 0.01, 0, 255);
+                this.b = this.fbm(2, this.t, i, j, 2, 0.01, 0, 255);
                 g.setColor(new Color((int) r, (int) gr, (int) b));
-                g.fillRect(2 * i, 2 * j, 4, 4);
+                g.fillRect(2 * i, 2 * j, 2, 2);
             }
         }
     }
